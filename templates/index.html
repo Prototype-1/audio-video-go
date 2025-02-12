@@ -20,33 +20,28 @@
     <script>
         async function loadLatestVideo() {
             try {
-                const response = await fetch('/latest-video');
-                const data = await response.json();
-                
-                if (!response.ok) throw new Error("No processed video found.");
-
-                const videoSrc = data.videoPath; 
-                const video = document.getElementById("videoPlayer");
-
+                let response = await fetch('http://localhost:8000/latest-video');
+                if (!response.ok) {
+                    console.log("No processed video found.");
+                    return;
+                }
+    
+                let filename = await response.text();
+                let videoSrc = `/hls/${filename}/index.m3u8`;
+    
                 if (Hls.isSupported()) {
-                    const hls = new Hls();
+                    let video = document.getElementById("videoPlayer");
+                    let hls = new Hls();
                     hls.loadSource(videoSrc);
                     hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-                        video.play();
-                    });
-                } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-                    video.src = videoSrc;
-                    video.play();
                 } else {
-                    console.error("HLS is not supported on this browser.");
+                    document.getElementById("videoPlayer").src = videoSrc;
                 }
             } catch (error) {
-                console.log(error.message);
+                console.log("Error fetching latest video:", error);
             }
         }
-
-        document.addEventListener("DOMContentLoaded", loadLatestVideo);
+        loadLatestVideo();
     </script>
 </body>
 </html>

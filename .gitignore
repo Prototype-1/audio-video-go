@@ -1,0 +1,16 @@
+# Ignore all files inside assets and hls directories
+assets/*
+hls/*
+
+# Allow the directories themselves
+!assets/.gitkeep
+!hls/.gitkeep
+
+# Ignore specific file types (video/audio and HLS segments)
+*.mp4
+*.mp3
+*.mkv
+*.avi
+*.mov
+*.ts
+*.m3u8

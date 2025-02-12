@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"encoding/json"
 )
 
 const (
@@ -25,36 +24,39 @@ func RenderHomePage(w http.ResponseWriter, r *http.Request) {
 	tmpl.Execute(w, nil)
 }
 
+var latestVideoFilename string
+
 func HandleUpload(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
-		return
-	}
+    if r.Method != "POST" {
+        http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+        return
+    }
 
-	file, header, err := r.FormFile("media")
-	if err != nil {
-		http.Error(w, "Failed to read file", http.StatusBadRequest)
-		return
-	}
-	defer file.Close()
+    file, header, err := r.FormFile("media")
+    if err != nil {
+        http.Error(w, "Failed to read file", http.StatusBadRequest)
+        return
+    }
+    defer file.Close()
 
-	filePath := filepath.Join(uploadDir, header.Filename)
-	outFile, err := os.Create(filePath)
-	if err != nil {
-		http.Error(w, "Failed to save file", http.StatusInternalServerError)
-		return
-	}
-	defer outFile.Close()
+    filePath := filepath.Join(uploadDir, header.Filename)
+    outFile, err := os.Create(filePath)
+    if err != nil {
+        http.Error(w, "Failed to save file", http.StatusInternalServerError)
+        return
+    }
+    defer outFile.Close()
 
-	_, err = outFile.ReadFrom(file)
-	if err != nil {
-		http.Error(w, "Failed to write file", http.StatusInternalServerError)
-		return
-	}
+    _, err = outFile.ReadFrom(file)
+    if err != nil {
+        http.Error(w, "Failed to write file", http.StatusInternalServerError)
+        return
+    }
 
-	go convertToHLS(filePath, header.Filename)
+    latestVideoFilename = header.Filename 
+    go convertToHLS(filePath, header.Filename)
 
-	fmt.Fprintf(w, "File uploaded successfully! Processing HLS conversion...\n")
+    fmt.Fprintf(w, "File uploaded successfully! Processing HLS conversion...\n")
 }
 
 func convertToHLS(inputPath, filename string) {
@@ -73,25 +75,12 @@ func convertToHLS(inputPath, filename string) {
 }
 
 func GetLatestVideo(w http.ResponseWriter, r *http.Request) {
-	files, err := os.ReadDir(hlsDir)
-	if err != nil {
-		http.Error(w, "Failed to read HLS directory", http.StatusInternalServerError)
-		return
-	}
-
-	var latestFolder string
-	for _, file := range files {
-		if file.IsDir() {
-			latestFolder = file.Name()
-		}
-	}
-
-	if latestFolder == "" {
-		http.Error(w, "No processed video found", http.StatusNotFound)
-		return
-	}
-	response := map[string]string{"videoPath": "/hls/" + latestFolder + "/index.m3u8"}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+    if latestVideoFilename == "" {
+        http.Error(w, "No video available", http.StatusNotFound)
+        return
+    }
+    fmt.Fprint(w, latestVideoFilename)
 }
+
+
 
