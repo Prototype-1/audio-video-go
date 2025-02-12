@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Video Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+</head>
+<body>
+    <h2>Upload Video/Audio</h2>
+    <form action="http://localhost:8000/upload" method="post" enctype="multipart/form-data">
+        <label for="media-upload">Choose a file to upload</label>
+        <input type="file" id="media-upload" name="media" required>
+        <button type="submit">Upload & Convert</button>
+    </form>
+
+    <h2>Playback</h2>
+    <video id="videoPlayer" controls width="600"></video>
+
+    <script>
+        async function loadLatestVideo() {
+            try {
+                const response = await fetch('/latest-video');
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error("No processed video found.");
+
+                const videoSrc = data.videoPath; 
+                const video = document.getElementById("videoPlayer");
+
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(videoSrc);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                        video.play();
+                    });
+                } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+                    video.src = videoSrc;
+                    video.play();
+                } else {
+                    console.error("HLS is not supported on this browser.");
+                }
+            } catch (error) {
+                console.log(error.message);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", loadLatestVideo);
+    </script>
+</body>
+</html>
