@@ -56,7 +56,7 @@ func HandleUpload(w http.ResponseWriter, r *http.Request) {
     latestVideoFilename = header.Filename 
     go convertToHLS(filePath, header.Filename)
 
-    fmt.Fprintf(w, "File uploaded successfully! Processing HLS conversion...\n")
+    fmt.Fprintf(w, "File uploaded successfully!\n Processing HLS conversion...\n")
 }
 
 func convertToHLS(inputPath, filename string) {

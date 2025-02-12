@@ -56,6 +56,7 @@ This project allows users to upload video/audio files, convert them to HLS forma
 │-- handler.go        # Handles file uploads and HLS conversion
 │-- templates/
 │   └── index.html    # Frontend for uploading and playing videos
+     └── styles.css
 │-- assets/           # Stores uploaded files
 │-- hls/              # Stores converted HLS video segments
 │-- README.md         # Project documentation
